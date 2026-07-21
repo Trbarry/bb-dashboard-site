@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="30"><title>BB-MON · 2026-07-21T12:30:50Z</title><style>
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BB-MON · 2026-07-21T12:32:27Z</title><style>
 :root{--bg:#0d1117;--card:#161b22;--bd:#30363d;--fg:#e6edf3;--dim:#8b949e;--hot:#f85149;--warm:#d29922;--ok:#3fb950;--blue:#58a6ff}
 @media(prefers-color-scheme:light){:root{--bg:#f6f8fa;--card:#fff;--bd:#d0d7de;--fg:#1f2328;--dim:#636c76;--hot:#cf222e;--warm:#9a6700;--ok:#1a7f37;--blue:#0969da}}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:13px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,monospace;padding:16px}
@@ -18,8 +18,23 @@ td.ts{color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums}
 .pill{font-size:11px;padding:1px 6px;border-radius:10px;border:1px solid var(--bd);color:var(--dim)}
 .mono{font-family:ui-monospace,monospace}.small{font-size:11px;color:var(--dim)}
 .kpi{font-size:22px;font-weight:700}.note{max-width:420px}
-</style></head><body><h1>🛰️ BB-MON — dashboard monitoring</h1>
-<div class="sub">généré 2026-07-21T12:30:50Z · auto-refresh 30s · 100% local · <b>REDACTED</b> (findings non soumis masqués)</div>
+/* barre de statut sticky + countdown synchronisé */
+.bar{position:sticky;top:0;z-index:10;background:var(--card);border:1px solid var(--bd);border-radius:8px;
+ padding:10px 14px;margin-bottom:14px;display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+.bar h1{font-size:16px;margin:0;flex:0 0 auto}
+.bar .meta{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:12px;color:var(--dim);flex:1 1 auto}
+.bar b{color:var(--fg)}
+.cd{display:flex;align-items:center;gap:8px;font-variant-numeric:tabular-nums}
+.cd .ring{position:relative;width:34px;height:34px}
+.cd svg{transform:rotate(-90deg)}
+.cd .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block;box-shadow:0 0 0 0 var(--ok);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(63,185,80,.5)}70%{box-shadow:0 0 0 6px rgba(63,185,80,0)}100%{box-shadow:0 0 0 0 rgba(63,185,80,0)}}
+.age-warn{color:var(--warm)!important}.age-stale{color:var(--hot)!important}
+.legend{font-size:11px;color:var(--dim);margin:-6px 0 14px;display:flex;flex-wrap:wrap;gap:12px}
+.redbadge{background:var(--warm);color:#000;padding:1px 6px;border-radius:4px;font-weight:700;font-size:11px}
+</style></head><body><div class="bar"><h1>🛰️ BB-MON</h1><div class="meta"><span><span class="dot"></span> live</span><span>généré <b id="genclock">2026-07-21T12:32:27Z</b></span><span>données <b id="dataage">0s</b> <span class="small">(daemon /5min)</span></span><span class="redbadge">REDACTED</span></div><div class="cd"><span class="ring"><svg width="34" height="34"><circle cx="17" cy="17" r="14" fill="none" stroke="var(--bd)" stroke-width="3"/><circle id="cdarc" cx="17" cy="17" r="14" fill="none" stroke="var(--blue)" stroke-width="3" stroke-linecap="round" stroke-dasharray="88" stroke-dashoffset="0"/></svg><span class="num" id="cdnum">30</span></span><span class="small">reload page</span></div></div>
+<div class="legend"><span>🟢 upgrade réel → diff-auditor</span><span>🔵 code porteur</span><span>⚠️ fix/security → variant-hunt</span><span>⚪ bruit build/config</span><span>⛔ faux positif capteur</span></div>
 <div class="grid">
 <div class="card"><div class="small">sources fresh (24-48h)</div><div class="kpi">168</div></div>
 <div class="card"><div class="small">queue tickets</div><div class="kpi">133</div><div class="small">118 code · 15 bruit</div></div>
@@ -287,4 +302,23 @@ td.ts{color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums}
 <tr><td class="mono small">babylon-costaking-001</td><td class="small">reward-accounting</td><td class="small">low</td><td class="small">submitted</td></tr>
 <tr><td class="mono small">babylon-stkexp-rotation-phantom</td><td class="small">phantom-voting-power / avoiding-slashing</td><td class="small">medium</td><td class="small">submitted</td></tr>
 <tr><td class="mono small">berachain-2026-001</td><td class="small">share-accounting</td><td class="small">critical</td><td class="small">submitted</td></tr>
-</table></div></body></html>
+</table></div>
+<script>
+(function(){
+  var RELOAD=30, GEN=1784637147*1000, left=RELOAD, C=88;
+  var num=document.getElementById('cdnum'), arc=document.getElementById('cdarc'),
+      age=document.getElementById('dataage');
+  function fmt(s){return s<90?s+'s':Math.floor(s/60)+'m'+(s%60)+'s';}
+  function tick(){
+    num.textContent=left;
+    arc.style.strokeDashoffset=(C*(1-left/RELOAD)).toFixed(1);
+    var a=Math.max(0,Math.round((Date.now()-GEN)/1000));
+    age.textContent=fmt(a);
+    age.className=a>360?'age-stale':(a>150?'age-warn':'');
+    if(left<=0){location.reload();return;}
+    left--;
+  }
+  tick(); setInterval(tick,1000);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden){left=Math.min(left,3);}});
+})();
+</script></body></html>
